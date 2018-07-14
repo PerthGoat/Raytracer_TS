@@ -27,7 +27,7 @@ var Light = /** @class */ (function () {
 var Lighting = /** @class */ (function () {
     function Lighting() {
     }
-    Lighting.CalcLighting = function (P, N, lights) {
+    Lighting.CalcLighting = function (P, N, V, lights, s, sphereArray) {
         var i = 0;
         for (var l = 0; l < lights.length; l++) {
             var li = lights[l];
@@ -42,9 +42,26 @@ var Lighting = /** @class */ (function () {
                 else {
                     L = li.direction;
                 }
+                // shadows
+                var hit = Math_3D.IntersectAllSpheres(P, L, sphereArray);
+                if (hit.sphere != undefined) {
+                    continue;
+                }
+                // diffuse lighting
                 var n_dot_l = Math_3D.DotProduct(N, L);
                 if (n_dot_l > 0) {
                     i += li.intensity * n_dot_l / (Math_3D.VectorMagnitude(N) * Math_3D.VectorMagnitude(L));
+                }
+                // specular lighting
+                if (s != -1) {
+                    var R1 = Math_3D.MultiplyVector(N, 2);
+                    var R2 = Math_3D.DotProduct(N, L);
+                    var R3 = Math_3D.MultiplyVector(R1, R2);
+                    var R4 = Math_3D.SubtractVectors(R3, L);
+                    var r_dot_v = Math_3D.DotProduct(R4, V);
+                    if (r_dot_v > 0) {
+                        i += li.intensity * Math.pow(r_dot_v / (Math_3D.VectorMagnitude(R4) * Math_3D.VectorMagnitude(V)), s);
+                    }
                 }
             }
         }

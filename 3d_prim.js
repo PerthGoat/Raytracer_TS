@@ -6,10 +6,11 @@
 * Structure to hold a sphere
 */
 var Sphere = /** @class */ (function () {
-    function Sphere(center, radius, color) {
+    function Sphere(center, radius, color, specular) {
         this.center = center;
         this.radius = radius;
         this.color = color;
+        this.specular = specular;
     }
     return Sphere;
 }());
