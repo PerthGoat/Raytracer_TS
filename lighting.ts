@@ -44,8 +44,9 @@ class Lighting {
 					L = li.direction;
 				}
 				
+				let new_l : Vector3 = Math_3D.AddVectors(L, N);
 				// shadows
-				let hit : Ray_Result = Math_3D.IntersectAllSpheres(P, L, sphereArray);
+				let hit : Ray_Result = Math_3D.IntersectAllSpheres(P, new_l, sphereArray);
 				if(hit.sphere != undefined) {
 					continue;
 				}
