@@ -31,11 +31,14 @@ let camera: Vector3 = Vector3.Zero(); // camera is at the origin
 // Multi Sample Anti Aliasing
 let MSAA_samples: number = 8;
 
+PRNG.seed = MSAA_samples;
+
 let MSAA: Vector2[];
 if (MSAA_samples > 0) {// Randomly generate sample points within pixel, unbiased result
     MSAA = Array(MSAA_samples);
     for (let i: number = 0; i < MSAA_samples; i++) {
-        MSAA[i] = new Vector2(Math.random() - .5, Math.random() - .5);
+        //MSAA[i] = new Vector2(Math.random() - .5, Math.random() - .5);
+        MSAA[i] = new Vector2(PRNG.Random() - .5, PRNG.Random() - .5);
     }
 } else if (MSAA_samples == 0) {
     MSAA = [new Vector2(0, 0)];

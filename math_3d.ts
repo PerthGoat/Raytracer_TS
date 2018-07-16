@@ -149,3 +149,13 @@ class Math_3D {
         return { sphere: sphere, distance: distance, hit_point: undefined, hit_normal: undefined };
     }
 }
+
+// Pseudo Random Number Generator, repeatably random based on seed.
+class PRNG {
+    public static seed: number = 6;
+
+    public static Random(): number {
+        PRNG.seed = (PRNG.seed * 9301 + 49297) % 233280;
+        return PRNG.seed / 233280;
+    }
+}
