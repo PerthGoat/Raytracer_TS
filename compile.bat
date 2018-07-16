@@ -1,0 +1,1 @@
+tsc --outFile ray_tracer.js trace.ts

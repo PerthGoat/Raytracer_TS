@@ -35,6 +35,7 @@ class Lighting {
 
             if (li.type == LIGHT_TYPE.AMBIENT) {
                 i += li.intensity;
+                continue;
             } else {
                 let L: Vector3 = (li.type == LIGHT_TYPE.POINT) ? li.position.Subtract(P) : li.direction;
 
