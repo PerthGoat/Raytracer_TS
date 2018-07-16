@@ -106,50 +106,34 @@ class Math_3D {
 	/*
 	* Cast a ray to attempt to intersect with a sphere from start to end
 	*/
-    public static IntersectRaySphere(o: Vector3, lnn: Vector3, sphere: Sphere): number {
-
-        let l: Vector3 = lnn.Normalize(); // normalized ray direction
-
-        let c: Vector3 = sphere.center;
-        let r: number = sphere.radius;
-
+    public static IntersectRaySphere(P: Vector3, N: Vector3, sphere: Sphere): number {
+        // lnn: ray normal
         // part 1
         // -(l DOT (o - c))
 
-        let oc: Vector3 = o.Subtract(c); // o - c
-        let ld: number = l.Dot(oc); // l DOT (o - c)
-
-        let ldn: number = -ld; // -(l DOT (o - c))
+        let oc: Vector3 = P.Subtract(sphere.center); // o - c
+        let ld: number = N.Dot(oc); // l DOT (o - c)
+        // TODO: redundant? assume ray direction is pre normalized?
 
         // part 2
         // number under radical
-
-        let lds: number = ld * ld; // ld^2
         let mag: number = oc.Magnitude(); // || o - c ||
-        mag = mag * mag;
-        let result: number = lds - mag + r * r;
-        let sq: number = Math.sqrt(result);
+        let sq: number = Math.sqrt((ld * ld) - (mag * mag) + sphere.radius * sphere.radius);
 
-        return Math.min(ldn - sq, ldn + sq);
-
-        //let r1: number = ldn - sq;
-        //let r2: number = ldn + sq;
-
-        //return (r1 < r2) ? r1 : r2;
+        return Math.min(-sq - ld, sq - ld);
     }
 
 	/*
 	* Check all passed spheres for collision
 	*/
-    public static IntersectAllSpheres(o: Vector3, lnn: Vector3, sphereArray: Sphere[]): Ray_Result {
-        let l: Vector3 = Math_3D.UnitVector(lnn); // normalized ray direction
-
+    public static IntersectAllSpheres(P: Vector3, N: Vector3, sphereArray: Sphere[]): Ray_Result {
+        // lnn: ray normal
         // holds ending information
         let sphere: Sphere = undefined;
         let distance: number = 999;
 
         for (let i: number = 0; i < sphereArray.length; i++) {
-            let t_dist: number = Math_3D.IntersectRaySphere(o, lnn, sphereArray[i]);
+            let t_dist: number = Math_3D.IntersectRaySphere(P, N, sphereArray[i]);
             if (distance > t_dist && t_dist >= 0) {
                 distance = t_dist;
                 sphere = sphereArray[i];
@@ -157,10 +141,9 @@ class Math_3D {
         }
 
         if (sphere != undefined) {
-            let P: Vector3 = Math_3D.AddVectors(o, Math_3D.MultiplyVector(l, distance)); // compute hit pos
-            let N: Vector3 = Math_3D.SubtractVectors(P, sphere.center) // compute sphere normal
-            let NORM: Vector3 = Math_3D.UnitVector(N); // gets the normalized normal
-            return { sphere: sphere, distance: distance, hit_point: P, hit_normal: NORM };
+            let P1: Vector3 = P.Add(N.Multiply(distance)); // compute hit pos
+            // compute sphere normal
+            return { sphere: sphere, distance: distance, hit_point: P1, hit_normal: P1.Subtract(sphere.center).Normalize() };
         }
 
         return { sphere: sphere, distance: distance, hit_point: undefined, hit_normal: undefined };

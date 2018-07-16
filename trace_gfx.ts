@@ -11,8 +11,6 @@ class Vector2 {
         public y: number
     ) { }
 
-    //public static Zero: Vector2 = new Vector2(0, 0);
-    //public static One: Vector2 = new Vector2(1, 1);
     public static Zero(): Vector2 { return new Vector2(0, 0); }
     public static One(): Vector2 { return new Vector2(1, 1); }
 }
@@ -27,9 +25,6 @@ class Vector3 {
         public z: number
     ) { }
 
-    //public static Zero: Vector3 = new Vector3(0, 0, 0);
-    //public static One: Vector3 = new Vector3(1, 1, 1);
-    //public static White: Vector3 = new Vector3(255, 255, 255);
     public static Zero(): Vector3 { return new Vector3(0, 0, 0); }
     public static One(): Vector3 { return new Vector3(1, 1, 1); }
     public static White(): Vector3 { return new Vector3(255, 255, 255); }

@@ -19,12 +19,14 @@ let sphereArray: Sphere[] = [
 // define the scene lights
 let lightArray: Light[] = [
     new Light(LIGHT_TYPE.POINT, 0.6, new Vector3(2, 1, 0)),
-    new Light(LIGHT_TYPE.DIRECTIONAL, 0.2, undefined, new Vector3(1, 4, 4)),
+    new Light(LIGHT_TYPE.DIRECTIONAL, 0.2, undefined, new Vector3(1, 4, 4).Normalize()),
     new Light(LIGHT_TYPE.AMBIENT, 0.2)
 ];
 
+let backgroundColor = new Vector3(255, 255, 255);
+
 // define camera pos and other stuff
-let camera: Vector3 = new Vector3(0, 0, 0); // camera is at the origin
+let camera: Vector3 = Vector3.Zero(); // camera is at the origin
 
 // Multi Sample Anti Aliasing
 let MSAA_samples: number = 8;
@@ -46,31 +48,40 @@ if (MSAA_samples > 0) {// Randomly generate sample points within pixel, unbiased
     ];
 }
 
+if (MSAA_samples < 1) MSAA_samples = 1;
+
+let intAllSphT: number = 0, CalcLightingT: number = 0;
 let sT: number = performance.now();
 
-for (let x: number = -g.w / 2; x < g.w / 2; x++) {
-    for (let y: number = -g.h / 2; y < g.h / 2; y++) {
-        let c: Vector3 = new Vector3(0, 0, 0);
+for (let x: number = -g.w * .5; x < g.w * .5; x++) {
+    for (let y: number = -g.h * .5; y < g.h * .5; y++) {
+        let c: Vector3 = Vector3.Zero();
 
         for (let samp of MSAA) {
-            let v: Vector3 = new Vector3((x + samp.x) / g.w, (-y + samp.y) / g.h, 1);
-            let hit: Ray_Result = Math_3D.IntersectAllSpheres(camera, v, sphereArray);
-            if (hit.sphere != undefined) {
-                c = c.Add(hit.sphere.color.Multiply(
-                    Lighting.CalcLighting(hit.hit_point, hit.hit_normal, v.Normalize().Multiply(-1), lightArray, hit.sphere.specular, sphereArray)
-                ));
-            } else {
-                c = c.Add(Vector3.White());
-            }
-            //console.log();
-        }
-        c = c.Divide(MSAA.length);
+            let n: Vector3 = new Vector3((x + samp.x) / g.w, (-y + samp.y) / g.h, 1).Normalize();
 
-        g.putPixel(new Vector2(x + g.w / 2, y + g.w / 2), c);
+            //let sT1: number = performance.now();//profiling
+            let hit: Ray_Result = Math_3D.IntersectAllSpheres(camera, n, sphereArray);
+            //intAllSphT += performance.now() - sT1;//profiling
+
+            //let sT2: number = performance.now();//profiling
+            c = c.Add(
+                (hit.sphere != undefined) ?
+                    hit.sphere.color.Multiply(Lighting.CalcLighting(hit.hit_point, hit.hit_normal, n.Multiply(-1), lightArray, hit.sphere.specular, sphereArray))
+                    :
+                    backgroundColor
+            );
+            //CalcLightingT += performance.now() - sT2;//profiling
+        }
+        c = c.Divide(MSAA_samples);
+
+        g.putPixel(new Vector2(x + g.w * .5, y + g.w * .5), c);
     }
 }
 
 g.showBuffer();
 
-console.log(Math.round(performance.now() - sT) / 1000);
+console.log("IntersectAllSpheres: " + Math.round(intAllSphT) * .001);
+console.log("CalcLighting: " + Math.round(CalcLightingT) * .001);
+console.log("Total: " + Math.round(performance.now() - sT) * .001);
 //console.log(g.w);
