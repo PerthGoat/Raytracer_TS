@@ -31,17 +31,61 @@ let camera: Vector3 = Vector3.Zero(); // camera is at the origin
 // Multi Sample Anti Aliasing
 let MSAA_samples: number = 8;
 
-PRNG.seed = MSAA_samples;
-
 let MSAA: Vector2[];
-if (MSAA_samples > 0) {// Randomly generate sample points within pixel, unbiased result
+if (MSAA_samples > 1) {// Randomly generate sample points within pixel, unbiased result
+    PRNG.seed = 46;
     MSAA = Array(MSAA_samples);
     for (let i: number = 0; i < MSAA_samples; i++) {
         //MSAA[i] = new Vector2(Math.random() - .5, Math.random() - .5);
-        MSAA[i] = new Vector2(PRNG.Random() - .5, PRNG.Random() - .5);
+        //MSAA[i] = new Vector2(PRNG.Random() - .5, PRNG.Random() - .5);
+
+        let tries: number = i == 0 ? 1 : 16;
+        let max: Vector2 = Vector2.Zero();// Most distant sample from all other samples
+        let maxD: number = 0;
+        for (let j: number = 0; j < tries; j++) {
+            //let cand: Vector2 = new Vector2(Math.random() - .5, Math.random() - .5);// random sample
+            let cand: Vector2 = new Vector2(PRNG.Random() - .5, PRNG.Random() - .5);// pseudo random sample
+            if (i == 0) {
+                max = cand;
+                continue;
+            }
+            else {
+                let minD: number = 10;
+                let min: Vector2 = Vector2.Zero();
+                for (let k: number = 0; k < i; k++) {
+                    let offsets: Vector2[] = [
+                        Vector2.Zero(),
+                        Vector2.One(),
+                        new Vector2(1, 0),
+                        new Vector2(1, -1),
+                        new Vector2(0, -1),
+                        new Vector2(-1, -1),
+                        new Vector2(-1, 0),
+                        new Vector2(-1, 1),
+                        new Vector2(0, 1)
+                    ];
+
+                    let d: number = 10;
+                    for (let off of offsets) {
+                        d = Math.min(d, cand.Distance(MSAA[k].Add(off)));
+                    }
+
+                    if (d < minD) {
+                        minD = d;
+                        min = cand;
+                    }
+                }
+
+                if (minD > maxD) {
+                    maxD = minD;
+                    max = min;
+                }
+            }
+        }
+
+        MSAA[i] = max;
+        //console.log("samp" + (i + 1) + " " + Math.round(MSAA[i].x * 10) / 10 + " " + Math.round(MSAA[i].y * 10) / 10);
     }
-} else if (MSAA_samples == 0) {
-    MSAA = [new Vector2(0, 0)];
 } else if (MSAA_samples == -4) {
     MSAA = [
         new Vector2(-.25, .25),
@@ -49,7 +93,7 @@ if (MSAA_samples > 0) {// Randomly generate sample points within pixel, unbiased
         new Vector2(.25, -.25),
         new Vector2(-.25, -.25)
     ];
-}
+} else { MSAA = [new Vector2(0, 0)]; }
 
 if (MSAA_samples < 1) MSAA_samples = 1;
 
@@ -76,15 +120,14 @@ for (let x: number = -g.w * .5; x < g.w * .5; x++) {
             );
             //CalcLightingT += performance.now() - sT2;//profiling
         }
-        c = c.Divide(MSAA_samples);
 
-        g.putPixel(new Vector2(x + g.w * .5, y + g.w * .5), c);
+        g.putPixel(new Vector2(x + g.w * .5, y + g.w * .5), c.Divide(MSAA_samples));
     }
 }
 
 g.showBuffer();
 
-console.log("IntersectAllSpheres: " + Math.round(intAllSphT) * .001);
-console.log("CalcLighting: " + Math.round(CalcLightingT) * .001);
+//console.log("IntersectAllSpheres: " + Math.round(intAllSphT) * .001);
+//console.log("CalcLighting: " + Math.round(CalcLightingT) * .001);
 console.log("Total: " + Math.round(performance.now() - sT) * .001);
 //console.log(g.w);

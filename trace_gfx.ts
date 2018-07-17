@@ -13,6 +13,19 @@ class Vector2 {
 
     public static Zero(): Vector2 { return new Vector2(0, 0); }
     public static One(): Vector2 { return new Vector2(1, 1); }
+
+    public Add(V2: Vector2): Vector2 {
+        return new Vector2(this.x + V2.x, this.y + V2.y);
+    }
+    public Subtract(V2: Vector2): Vector2 {
+        return new Vector2(this.x - V2.x, this.y - V2.y);
+    }
+    public Magnitude(): number {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+    public Distance(V2: Vector2): number {
+        return this.Subtract(V2).Magnitude();
+    }
 }
 
 /*
@@ -109,10 +122,10 @@ class Graphics {
     putPixel(pos: Vector2, color: Vector3): void {
         let offset: number = (pos.y * this.w + pos.x) * 4; // offset for pixels, 32-bit RGBA
 
-        this.buf8[offset + 3] = 255; // alpha
         this.buf8[offset] = color.x; // red
         this.buf8[offset + 1] = color.y; // green
         this.buf8[offset + 2] = color.z; // blue
+        this.buf8[offset + 3] = 255; // alpha
     }
 
 	/*
