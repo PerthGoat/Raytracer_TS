@@ -32,16 +32,14 @@ let camera: Vector3 = Vector3.Zero(); // camera is at the origin
 let MSAA_samples: number = 8;
 
 let MSAA: Vector2[];
-if (MSAA_samples > 1) {// Randomly generate sample points within pixel, unbiased result
+if (MSAA_samples > 1) {// Randomly generate sample points within pixel
     PRNG.seed = 46;
     MSAA = Array(MSAA_samples);
     for (let i: number = 0; i < MSAA_samples; i++) {
-        //MSAA[i] = new Vector2(Math.random() - .5, Math.random() - .5);
-        //MSAA[i] = new Vector2(PRNG.Random() - .5, PRNG.Random() - .5);
+        let max: Vector2;// Most distant sample from all other samples
+        let maxD: number = 0;
 
         let tries: number = i == 0 ? 1 : 16;
-        let max: Vector2 = Vector2.Zero();// Most distant sample from all other samples
-        let maxD: number = 0;
         for (let j: number = 0; j < tries; j++) {
             //let cand: Vector2 = new Vector2(Math.random() - .5, Math.random() - .5);// random sample
             let cand: Vector2 = new Vector2(PRNG.Random() - .5, PRNG.Random() - .5);// pseudo random sample
@@ -51,49 +49,35 @@ if (MSAA_samples > 1) {// Randomly generate sample points within pixel, unbiased
             }
             else {
                 let minD: number = 10;
-                let min: Vector2 = Vector2.Zero();
+                let min;
+
                 for (let k: number = 0; k < i; k++) {
                     let offsets: Vector2[] = [
-                        Vector2.Zero(),
-                        Vector2.One(),
-                        new Vector2(1, 0),
-                        new Vector2(1, -1),
-                        new Vector2(0, -1),
-                        new Vector2(-1, -1),
-                        new Vector2(-1, 0),
-                        new Vector2(-1, 1),
-                        new Vector2(0, 1)
+                        new Vector2(-1, 1), new Vector2(0, 1), Vector2.One(),
+                        new Vector2(-1, 0), Vector2.Zero(), new Vector2(1, 0),
+                        new Vector2(-1, -1), new Vector2(0, -1), new Vector2(1, -1)
                     ];
 
                     let d: number = 10;
-                    for (let off of offsets) {
-                        d = Math.min(d, cand.Distance(MSAA[k].Add(off)));
-                    }
-
-                    if (d < minD) {
-                        minD = d;
-                        min = cand;
-                    }
+                    for (let off of offsets) { d = Math.min(d, cand.Distance(MSAA[k].Add(off))); }
+                    if (d < minD) { minD = d; min = cand; }
                 }
 
-                if (minD > maxD) {
-                    maxD = minD;
-                    max = min;
-                }
+                if (minD > maxD) { maxD = minD; max = min; }
             }
         }
 
         MSAA[i] = max;
         //console.log("samp" + (i + 1) + " " + Math.round(MSAA[i].x * 10) / 10 + " " + Math.round(MSAA[i].y * 10) / 10);
     }
-} else if (MSAA_samples == -4) {
+} else if (MSAA_samples == -4) {// 4x MSAA
     MSAA = [
         new Vector2(-.25, .25),
         new Vector2(.25, .25),
         new Vector2(.25, -.25),
         new Vector2(-.25, -.25)
     ];
-} else { MSAA = [new Vector2(0, 0)]; }
+} else { MSAA = [new Vector2(0, 0)]; }// No MSAA
 
 if (MSAA_samples < 1) MSAA_samples = 1;
 
@@ -107,18 +91,14 @@ for (let x: number = -g.w * .5; x < g.w * .5; x++) {
         for (let samp of MSAA) {
             let n: Vector3 = new Vector3((x + samp.x) / g.w, (-y + samp.y) / g.h, 1).Normalize();
 
-            //let sT1: number = performance.now();//profiling
             let hit: Ray_Result = Math_3D.IntersectAllSpheres(camera, n, sphereArray);
-            //intAllSphT += performance.now() - sT1;//profiling
 
-            //let sT2: number = performance.now();//profiling
             c = c.Add(
                 (hit.sphere != undefined) ?
                     hit.sphere.color.Multiply(Lighting.CalcLighting(hit.hit_point, hit.hit_normal, n.Multiply(-1), lightArray, hit.sphere.specular, sphereArray))
                     :
                     backgroundColor
             );
-            //CalcLightingT += performance.now() - sT2;//profiling
         }
 
         g.putPixel(new Vector2(x + g.w * .5, y + g.w * .5), c.Divide(MSAA_samples));
@@ -127,7 +107,5 @@ for (let x: number = -g.w * .5; x < g.w * .5; x++) {
 
 g.showBuffer();
 
-//console.log("IntersectAllSpheres: " + Math.round(intAllSphT) * .001);
-//console.log("CalcLighting: " + Math.round(CalcLightingT) * .001);
 console.log("Total: " + Math.round(performance.now() - sT) * .001);
 //console.log(g.w);
